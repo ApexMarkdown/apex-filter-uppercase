@@ -1,11 +1,22 @@
 #!/usr/bin/env lua
 
 -- Simple Pandoc JSON filter that uppercases all Str inlines
--- Requires a JSON library on LUA_PATH, e.g. dkjson:
+-- JSON dependency: dkjson
+-- This filter expects the Lua JSON module "dkjson" to be available.
+-- On macOS/Homebrew Lua, you can typically install it with:
+--   brew install luarocks
 --   luarocks install dkjson
--- and then:  lua -e 'require("dkjson")'  should succeed.
 
-local json = require "dkjson"
+local ok, json = pcall(require, "dkjson")
+if not ok then
+  io.stderr:write(
+    "apex-filter-uppercase: missing Lua dependency 'dkjson'.\n",
+    "Install it, for example:\n",
+    "  brew install luarocks\n",
+    "  luarocks install dkjson\n"
+  )
+  os.exit(1)
+end
 
 local function uppercase_str(node)
   if type(node) == "table" and node.t == "Str" and type(node.c) == "string" then
@@ -48,3 +59,4 @@ doc = walk(doc)
 
 local out = json.encode(doc, { indent = false })
 io.write(out)
+io.output():flush()
